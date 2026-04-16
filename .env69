@@ -1,0 +1,191 @@
+# ML Auto-Retrain System Configuration
+# Rename this file to .env to use (or keep as .env69 for reference)
+
+# ============================================
+# SERVER CONFIGURATION
+# ============================================
+API_HOST=0.0.0.0
+API_PORT=8080
+DEBUG=False
+
+# ============================================
+# PATHS
+# ============================================
+DATA_DIR=data
+MODEL_DIR=data/models
+UPLOAD_DIR=data/uploads
+REFERENCE_DIR=data/reference
+
+# ============================================
+# CARA ALGORITHM THRESHOLDS
+# ============================================
+# Full retrain threshold (score >= 0.7)
+CARA_FULL_RETRAIN_THRESHOLD=0.7
+
+# Incremental retrain threshold (score >= 0.4)
+CARA_INCREMENTAL_THRESHOLD=0.4
+
+# Defer threshold (score >= 0.2)
+CARA_DEFER_THRESHOLD=0.2
+
+# Safety floor - accuracy drop that triggers immediate retrain
+CARA_SAFETY_FLOOR_DROP=0.15
+
+# ============================================
+# DRIFT DETECTION PARAMETERS
+# ============================================
+# KS test significance level (p-value threshold)
+KS_SIGNIFICANCE_LEVEL=0.05
+
+# PSI threshold for drift detection
+PSI_THRESHOLD=0.1
+
+# Minimum samples required for drift detection
+MIN_SAMPLES=1000
+
+# ============================================
+# FILE UPLOAD LIMITS
+# ============================================
+# Maximum file size in MB
+MAX_UPLOAD_SIZE_MB=100
+
+# Supported file formats (comma-separated)
+SUPPORTED_FORMATS=.parquet,.csv
+
+# ============================================
+# MODEL TRAINING
+# ============================================
+# Random seed for reproducibility
+RANDOM_SEED=42
+
+# Test split ratio
+TEST_SIZE=0.2
+
+# Cross-validation folds
+CV_FOLDS=5
+
+# ============================================
+# PERFORMANCE
+# ============================================
+# Enable GPU acceleration (True/False)
+USE_GPU=False
+
+# Number of parallel workers
+N_WORKERS=4
+
+# Batch size for processing
+BATCH_SIZE=10000
+
+# ============================================
+# MONITORING
+# ============================================
+# Enable real-time monitoring
+ENABLE_MONITORING=True
+
+# Drift history retention (days)
+DRIFT_HISTORY_DAYS=90
+
+# Audit log retention (days)
+AUDIT_LOG_DAYS=365
+
+# ============================================
+# SECURITY
+# ============================================
+# Enable CORS (for development)
+ENABLE_CORS=True
+
+# Allowed origins (comma-separated)
+ALLOWED_ORIGINS=http://localhost:8080,http://127.0.0.1:8080
+
+# API key (leave empty for no authentication)
+API_KEY=
+
+# ============================================
+# LOGGING
+# ============================================
+# Log level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+LOG_LEVEL=INFO
+
+# Log file path
+LOG_FILE=logs/app.log
+
+# Enable console logging
+LOG_TO_CONSOLE=True
+
+# ============================================
+# DATABASE (Optional - for production)
+# ============================================
+# Database URL (leave empty to use file-based storage)
+DATABASE_URL=
+
+# Redis URL (leave empty to disable caching)
+REDIS_URL=
+
+# ============================================
+# NOTIFICATIONS (Optional)
+# ============================================
+# Email notifications for critical drift
+ENABLE_EMAIL_NOTIFICATIONS=False
+SMTP_HOST=
+SMTP_PORT=587
+SMTP_USER=
+SMTP_PASSWORD=
+NOTIFICATION_EMAIL=
+
+# Slack webhook for alerts
+SLACK_WEBHOOK_URL=
+
+# ============================================
+# ADVANCED FEATURES
+# ============================================
+# Enable LSTM drift prediction
+ENABLE_LSTM_PREDICTION=False
+
+# Enable multi-model ensemble
+ENABLE_ENSEMBLE=False
+
+# Enable self-healing
+ENABLE_SELF_HEALING=False
+
+# Enable fairness monitoring
+ENABLE_FAIRNESS_MONITORING=True
+
+# ============================================
+# DOCKER CONFIGURATION
+# ============================================
+# Docker network name
+DOCKER_NETWORK=ml-retrain-network
+
+# Container names
+DRIFT_MONITOR_CONTAINER=drift-monitor
+RETRAIN_ENGINE_CONTAINER=retrain-engine
+
+# ============================================
+# DEVELOPMENT
+# ============================================
+# Enable hot reload
+HOT_RELOAD=True
+
+# Enable debug mode
+DEBUG_MODE=False
+
+# Enable profiling
+ENABLE_PROFILING=False
+
+# ============================================
+# PRODUCTION
+# ============================================
+# Production mode
+PRODUCTION=False
+
+# Number of workers (for production)
+WORKERS=4
+
+# Worker timeout (seconds)
+WORKER_TIMEOUT=300
+
+# ============================================
+# CUSTOM SETTINGS
+# ============================================
+# Add your custom settings below
+# CUSTOM_SETTING=value
