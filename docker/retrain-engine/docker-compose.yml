@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  retrain-engine:
+    build: .
+    container_name: ml-retrain-engine
+    ports:
+      - "8002:8002"
+    volumes:
+      - ../../data:/app/data
+      - ../../src:/app/src
+    environment:
+      - MODEL_DIR=/app/data/models
+      - USE_GPU=false
+      - N_ESTIMATORS=100
+      - MAX_DEPTH=10
+    restart: unless-stopped
+    networks:
+      - ml-network
+
+networks:
+  ml-network:
+    driver: bridge

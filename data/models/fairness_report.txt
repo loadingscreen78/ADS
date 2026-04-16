@@ -1,0 +1,56 @@
+======================================================================
+FAIRNESS MONITORING REPORT
+======================================================================
+
+
+Protected Attribute: user_age_bucket
+----------------------------------------------------------------------
+  Demographic Parity Diff: 0.0579
+  Equal Opportunity Diff:  0.2500
+  Disparate Impact Ratio:  0.3101
+  Status: ✗ UNFAIR
+
+  Group Statistics:
+    young: 499 samples, positive rate: 3.81%
+    middle: 346 samples, positive rate: 2.60%
+    senior: 155 samples, positive rate: 8.39%
+
+  Violations:
+    - Equal opportunity violation: 0.250 > 0.1
+    - Disparate impact violation: 0.310 < 0.8
+
+Protected Attribute: is_international
+----------------------------------------------------------------------
+  Demographic Parity Diff: 0.0115
+  Equal Opportunity Diff:  0.0488
+  Disparate Impact Ratio:  0.7266
+  Status: ✗ UNFAIR
+
+  Group Statistics:
+    domestic: 902 samples, positive rate: 4.21%
+    international: 98 samples, positive rate: 3.06%
+
+  Violations:
+    - Disparate impact violation: 0.727 < 0.8
+
+Protected Attribute: merchant_category
+----------------------------------------------------------------------
+  Demographic Parity Diff: 0.0233
+  Equal Opportunity Diff:  0.1429
+  Disparate Impact Ratio:  0.5729
+  Status: ✗ UNFAIR
+
+  Group Statistics:
+    cat_3: 220 samples, positive rate: 5.45%
+    cat_4: 210 samples, positive rate: 3.81%
+    cat_1: 181 samples, positive rate: 4.42%
+    cat_0: 197 samples, positive rate: 3.55%
+    cat_2: 192 samples, positive rate: 3.12%
+
+  Violations:
+    - Equal opportunity violation: 0.143 > 0.1
+    - Disparate impact violation: 0.573 < 0.8
+
+======================================================================
+OVERALL STATUS: ✗ UNFAIR
+======================================================================

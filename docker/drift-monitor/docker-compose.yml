@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  drift-monitor:
+    build: .
+    container_name: ml-drift-monitor
+    ports:
+      - "8001:8001"
+    volumes:
+      - ../../data:/app/data
+      - ../../src:/app/src
+    environment:
+      - DRIFT_CHECK_INTERVAL=300
+      - REFERENCE_DATA_PATH=/app/data/reference/reference.parquet
+      - PRODUCTION_DATA_PATH=/app/data/production
+    restart: unless-stopped
+    networks:
+      - ml-network
+
+networks:
+  ml-network:
+    driver: bridge

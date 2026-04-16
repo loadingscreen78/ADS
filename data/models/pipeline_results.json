@@ -1,0 +1,101 @@
+[
+  {
+    "batch_id": "001_clean",
+    "timestamp": "2026-04-11T18:08:56.073676",
+    "drift_score": {
+      "batch_id": "001_clean",
+      "timestamp": "2026-04-11T18:08:56.304001",
+      "n_features": 10,
+      "ks_drifted": [],
+      "psi_drifted": [],
+      "confirmed_drift": [],
+      "drift_ratio": 0.0,
+      "max_psi": 0.0004,
+      "avg_psi": 0.0002,
+      "overall_severity": "NONE"
+    },
+    "fairness_metrics": null,
+    "cara_decision": {
+      "decision": "NO_ACTION",
+      "score": 0.0,
+      "expected_gain": 0.0,
+      "justification": "No significant drift detected (drift_ratio=0.000, max_psi=0.000). No action needed."
+    },
+    "retrain_result": null,
+    "status": "completed",
+    "processing_time": 0.2357470989227295
+  },
+  {
+    "batch_id": "002_moderate",
+    "timestamp": "2026-04-11T18:08:56.311130",
+    "drift_score": {
+      "batch_id": "002_moderate",
+      "timestamp": "2026-04-11T18:08:56.526709",
+      "n_features": 10,
+      "ks_drifted": [
+        "amount",
+        "merchant_category",
+        "is_international"
+      ],
+      "psi_drifted": [
+        "merchant_category"
+      ],
+      "confirmed_drift": [
+        "merchant_category"
+      ],
+      "drift_ratio": 0.1,
+      "max_psi": 3.5533,
+      "avg_psi": 0.375,
+      "overall_severity": "CRITICAL"
+    },
+    "fairness_metrics": null,
+    "cara_decision": {
+      "decision": "NO_ACTION",
+      "score": 0.085,
+      "expected_gain": 0.005,
+      "justification": "CARA score 0.085 too low. Expected gain (0.50%) does not justify GPU cost. No action."
+    },
+    "retrain_result": null,
+    "status": "completed",
+    "processing_time": 0.222930908203125
+  },
+  {
+    "batch_id": "003_severe",
+    "timestamp": "2026-04-11T18:08:56.534061",
+    "drift_score": {
+      "batch_id": "003_severe",
+      "timestamp": "2026-04-11T18:08:56.725843",
+      "n_features": 10,
+      "ks_drifted": [
+        "amount",
+        "hour_of_day",
+        "transaction_count_7d",
+        "is_international"
+      ],
+      "psi_drifted": [
+        "amount",
+        "hour_of_day",
+        "transaction_count_7d"
+      ],
+      "confirmed_drift": [
+        "amount",
+        "hour_of_day",
+        "transaction_count_7d"
+      ],
+      "drift_ratio": 0.3,
+      "max_psi": 9.1019,
+      "avg_psi": 1.5909,
+      "overall_severity": "CRITICAL"
+    },
+    "fairness_metrics": null,
+    "cara_decision": {
+      "decision": "DEFER",
+      "score": 0.255,
+      "expected_gain": 0.015,
+      "justification": "CARA score 0.255 below threshold. Drift signal weak. Deferring \u2014 will re-check next cycle."
+    },
+    "retrain_result": null,
+    "status": "completed",
+    "processing_time": 0.19178175926208496
+  }
+]

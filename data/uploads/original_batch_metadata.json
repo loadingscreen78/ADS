@@ -1,0 +1,157 @@
+{
+  "filename": "original_100K.parquet",
+  "upload_time": "2026-04-16T10:55:00.962329",
+  "n_rows": 100000,
+  "n_columns": 15,
+  "columns": [
+    "amount",
+    "merchant_category",
+    "transaction_count_7d",
+    "card_type",
+    "card_age_days",
+    "card_limit",
+    "user_age",
+    "income_bracket",
+    "account_age_days",
+    "hour_of_day",
+    "day_of_week",
+    "month",
+    "is_international",
+    "distance_from_home",
+    "is_fraud"
+  ],
+  "dtypes": {
+    "amount": "float64",
+    "merchant_category": "int32",
+    "transaction_count_7d": "int32",
+    "card_type": "int32",
+    "card_age_days": "float64",
+    "card_limit": "int32",
+    "user_age": "float64",
+    "income_bracket": "int32",
+    "account_age_days": "float64",
+    "hour_of_day": "int32",
+    "day_of_week": "int32",
+    "month": "int32",
+    "is_international": "int32",
+    "distance_from_home": "float64",
+    "is_fraud": "int32"
+  },
+  "memory_mb": 7.6295166015625,
+  "missing_values": {
+    "amount": 0,
+    "merchant_category": 0,
+    "transaction_count_7d": 0,
+    "card_type": 0,
+    "card_age_days": 0,
+    "card_limit": 0,
+    "user_age": 0,
+    "income_bracket": 0,
+    "account_age_days": 0,
+    "hour_of_day": 0,
+    "day_of_week": 0,
+    "month": 0,
+    "is_international": 0,
+    "distance_from_home": 0,
+    "is_fraud": 0
+  },
+  "has_target": true,
+  "fraud_rate": 0.0604,
+  "class_distribution": {
+    "0": 93960,
+    "1": 6040
+  },
+  "numeric_stats": {
+    "amount": {
+      "mean": 168.036244552843,
+      "std": 469.05483892469124,
+      "min": 0.06731273753089868,
+      "max": 45189.78643858891
+    },
+    "merchant_category": {
+      "mean": 1.99781,
+      "std": 1.4134302889608024,
+      "min": 0.0,
+      "max": 4.0
+    },
+    "transaction_count_7d": {
+      "mean": 5.00406,
+      "std": 2.2424749281403424,
+      "min": 0.0,
+      "max": 17.0
+    },
+    "card_type": {
+      "mean": 1.50339,
+      "std": 1.1180433838228645,
+      "min": 0.0,
+      "max": 3.0
+    },
+    "card_age_days": {
+      "mean": 727.1177715770973,
+      "std": 728.8298552435231,
+      "min": 0.005436018158281637,
+      "max": 8153.46628830147
+    },
+    "card_limit": {
+      "mean": 8680.015,
+      "std": 8688.169942096232,
+      "min": 1000.0,
+      "max": 25000.0
+    },
+    "user_age": {
+      "mean": 40.52629425141621,
+      "std": 14.104034590007815,
+      "min": 18.0,
+      "max": 90.0
+    },
+    "income_bracket": {
+      "mean": 1.49652,
+      "std": 1.1165304993611058,
+      "min": 0.0,
+      "max": 3.0
+    },
+    "account_age_days": {
+      "mean": 1101.3608671664058,
+      "std": 1104.9322777113666,
+      "min": 0.010343234777998521,
+      "max": 12728.23558548386
+    },
+    "hour_of_day": {
+      "mean": 11.47644,
+      "std": 6.933875230537186,
+      "min": 0.0,
+      "max": 23.0
+    },
+    "day_of_week": {
+      "mean": 3.0054,
+      "std": 1.9982319107920616,
+      "min": 0.0,
+      "max": 6.0
+    },
+    "month": {
+      "mean": 6.50058,
+      "std": 3.442248996569182,
+      "min": 1.0,
+      "max": 12.0
+    },
+    "is_international": {
+      "mean": 0.04986,
+      "std": 0.21765673466387722,
+      "min": 0.0,
+      "max": 1.0
+    },
+    "distance_from_home": {
+      "mean": 9.97942715792355,
+      "std": 9.99922589094933,
+      "min": 0.0002356319432856096,
+      "max": 116.54807945775235
+    },
+    "is_fraud": {
+      "mean": 0.0604,
+      "std": 0.23822763803571417,
+      "min": 0.0,
+      "max": 1.0
+    }
+  },
+  "batch_id": "original_batch"
+}

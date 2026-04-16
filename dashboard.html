@@ -1,0 +1,1450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ML Auto-Retrain Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: #fff;
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            text-align: center;
+            border-bottom: 3px solid #4CAF50;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card h2 {
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .metric-label {
+            font-size: 1em;
+            opacity: 0.8;
+        }
+        
+        .metric-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-active {
+            background: #4CAF50;
+        }
+        
+        .status-warning {
+            background: #ff9800;
+        }
+        
+        .status-error {
+            background: #f44336;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 250px;
+            margin-top: 15px;
+        }
+        
+        .btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+        
+        .btn:hover {
+            background: #45a049;
+            transform: scale(1.05);
+        }
+        
+        .btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+        
+        .btn-upload {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .btn-upload:hover {
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+        }
+        
+        .btn-custom {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .btn-custom:hover {
+            background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);
+        }
+        
+        .upload-dialog {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(30, 60, 114, 0.98);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            z-index: 2000;
+            min-width: 400px;
+            border: 2px solid #4CAF50;
+        }
+        
+        .upload-dialog.show {
+            display: block;
+        }
+        
+        .upload-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1999;
+        }
+        
+        .upload-overlay.show {
+            display: block;
+        }
+        
+        .upload-dialog h3 {
+            margin-bottom: 20px;
+            color: #4CAF50;
+        }
+        
+        .upload-dialog input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 10px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+        
+        .upload-dialog input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 10px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+        
+        .upload-result {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 10px;
+            display: none;
+        }
+        
+        .upload-result.success {
+            background: rgba(76, 175, 80, 0.3);
+            border: 2px solid #4CAF50;
+            display: block;
+        }
+        
+        .upload-result.error {
+            background: rgba(244, 67, 54, 0.3);
+            border: 2px solid #f44336;
+            display: block;
+        }
+        
+        .alert {
+            background: rgba(244, 67, 54, 0.2);
+            border-left: 4px solid #f44336;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        
+        .alert-warning {
+            background: rgba(255, 152, 0, 0.2);
+            border-left-color: #ff9800;
+        }
+        
+        .alert-success {
+            background: rgba(76, 175, 80, 0.2);
+            border-left-color: #4CAF50;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #8BC34A);
+            transition: width 0.5s ease;
+        }
+        
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+            margin-bottom: 20px;
+        }
+        
+        .tab {
+            padding: 15px 30px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .tab:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .tab.active {
+            border-bottom-color: #4CAF50;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .innovation-badge {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            color: #000;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+            display: inline-block;
+            margin-left: 10px;
+        }
+        
+        .real-time-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(76, 175, 80, 0.9);
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 0.9em;
+            z-index: 1000;
+        }
+        
+        .log-entry {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            padding: 5px 10px;
+            border-left: 3px solid #4CAF50;
+            margin: 5px 0;
+            background: rgba(0, 0, 0, 0.2);
+        }
+        
+        .log-time {
+            color: #4CAF50;
+            margin-right: 10px;
+        }
+        
+        #loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #4CAF50;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div id="loading">
+        <div class="spinner"></div>
+    </div>
+    
+    <div class="real-time-indicator">
+        <span class="status-indicator status-active"></span>
+        <span id="connection-status">Connected</span>
+    </div>
+    
+    <div class="header">
+        <h1>🤖 ML Auto-Retrain Dashboard
+            <span class="innovation-badge">⭐ LSTM Innovation</span>
+        </h1>
+        <p class="subtitle">Complete Day 1-10 Implementation | Real-Time Monitoring</p>
+    </div>
+    
+    <div class="container">
+        <!-- Tabs -->
+        <div class="tabs">
+            <div class="tab active" onclick="showTab('overview')">📊 Overview</div>
+            <div class="tab" onclick="showTab('drift')">🔍 Drift Detection</div>
+            <div class="tab" onclick="showTab('cara')">⚙️ CARA Scheduler</div>
+            <div class="tab" onclick="showTab('lstm')">🧠 LSTM Predictor</div>
+            <div class="tab" onclick="showTab('fairness')">⚖️ Fairness</div>
+            <div class="tab" onclick="showTab('logs')">📜 Logs</div>
+        </div>
+        
+        <!-- Overview Tab -->
+        <div id="overview" class="tab-content active">
+            <div class="grid">
+                <div class="card">
+                    <h2>📈 Model Performance</h2>
+                    <div class="metric">
+                        <span class="metric-label">Accuracy</span>
+                        <span class="metric-value" id="accuracy">95.1%</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">AUC Score</span>
+                        <span class="metric-value" id="auc">90.6%</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Model Version</span>
+                        <span class="metric-value" id="model-version">v1</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Training Time</span>
+                        <span class="metric-value" id="training-time">1.23s</span>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2>🎯 Current Status</h2>
+                    <div class="metric">
+                        <span class="metric-label">Current Drift</span>
+                        <span class="metric-value" id="current-drift">0.0%</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Severity</span>
+                        <span class="metric-value" id="severity">NONE</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Processed Batches</span>
+                        <span class="metric-value" id="processed-batches">0</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">System Status</span>
+                        <span class="metric-value" style="color: #4CAF50;">● Active</span>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2>🚀 Quick Actions</h2>
+                    <button class="btn" onclick="processBatch()">📊 Process Batch</button>
+                    <button class="btn" onclick="trainModel()">🎯 Train Model</button>
+                    <button class="btn" onclick="trainLSTM()">🧠 Train LSTM</button>
+                    <button class="btn" onclick="runFullPipeline()">▶️ Run Full Pipeline</button>
+                    <button class="btn btn-upload" onclick="uploadOriginalBatch()">📤 Upload Original Batch</button>
+                    <button class="btn btn-upload" onclick="uploadDriftedBatch()">📤 Upload Drifted Batch</button>
+                    <button class="btn btn-custom" onclick="showUploadDialog()">📁 Upload Custom File</button>
+                </div>
+            </div>
+            
+            <div class="grid">
+                <div class="card">
+                    <h2>📊 Drift Trend</h2>
+                    <div class="chart-container">
+                        <canvas id="driftChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2>📈 Model Performance History</h2>
+                    <div class="chart-container">
+                        <canvas id="performanceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Drift Detection Tab -->
+        <div id="drift" class="tab-content">
+            <div class="grid">
+                <div class="card">
+                    <h2>🔍 Drift Detection Engine</h2>
+                    <p style="margin-bottom: 15px;">Dual detection using KS Test + PSI</p>
+                    <div class="metric">
+                        <span class="metric-label">KS Test Features Drifted</span>
+                        <span class="metric-value" id="ks-features">0/10</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">PSI Features Drifted</span>
+                        <span class="metric-value" id="psi-features">0/10</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Confirmed Drift</span>
+                        <span class="metric-value" id="confirmed-drift">0</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Average PSI</span>
+                        <span class="metric-value" id="avg-psi">0.00</span>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2>📋 Drift Thresholds</h2>
+                    <div class="metric">
+                        <span class="metric-label">Low</span>
+                        <span class="metric-value" style="color: #4CAF50;">PSI < 0.10</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Moderate</span>
+                        <span class="metric-value" style="color: #ff9800;">PSI 0.10-0.25</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Significant</span>
+                        <span class="metric-value" style="color: #f44336;">PSI > 0.25</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>📊 Drift History</h2>
+                <div class="chart-container" style="height: 300px;">
+                    <canvas id="driftHistoryChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- CARA Scheduler Tab -->
+        <div id="cara" class="tab-content">
+            <div class="grid">
+                <div class="card">
+                    <h2>⚙️ CARA Decision</h2>
+                    <div class="metric">
+                        <span class="metric-label">Current Decision</span>
+                        <span class="metric-value" id="cara-decision">NO_ACTION</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">CARA Score</span>
+                        <span class="metric-value" id="cara-score">0.00</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Expected Gain</span>
+                        <span class="metric-value" id="expected-gain">0.0%</span>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2>📊 Decision Thresholds</h2>
+                    <div class="metric">
+                        <span class="metric-label">Full Retrain</span>
+                        <span class="metric-value" style="color: #f44336;">score > 0.7</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Incremental</span>
+                        <span class="metric-value" style="color: #ff9800;">score 0.4-0.7</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Defer</span>
+                        <span class="metric-value" style="color: #2196F3;">score 0.2-0.4</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">No Action</span>
+                        <span class="metric-value" style="color: #4CAF50;">score < 0.2</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>💡 Justification</h2>
+                <p id="cara-justification" style="font-size: 1.1em; line-height: 1.6;">
+                    No significant drift detected. System operating normally.
+                </p>
+            </div>
+        </div>
+        
+        <!-- LSTM Predictor Tab -->
+        <div id="lstm" class="tab-content">
+            <div class="card">
+                <h2>🧠 LSTM Drift Predictor <span class="innovation-badge">⭐ KEY INNOVATION</span></h2>
+                <p style="margin-bottom: 20px;">
+                    Predicts drift 2 weeks ahead using historical patterns. Enables proactive retraining.
+                </p>
+                
+                <div class="grid">
+                    <div>
+                        <h3 style="margin-bottom: 10px;">Recent 4 Weeks (Input)</h3>
+                        <div id="recent-weeks" style="font-size: 1.2em; font-family: monospace;">
+                            <div class="metric">
+                                <span>Week -3:</span>
+                                <span id="week-3">0.00</span>
+                            </div>
+                            <div class="metric">
+                                <span>Week -2:</span>
+                                <span id="week-2">0.00</span>
+                            </div>
+                            <div class="metric">
+                                <span>Week -1:</span>
+                                <span id="week-1">0.00</span>
+                            </div>
+                            <div class="metric">
+                                <span>Current:</span>
+                                <span id="week-0">0.00</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h3 style="margin-bottom: 10px;">Predicted 2 Weeks (Output)</h3>
+                        <div id="predicted-weeks" style="font-size: 1.2em; font-family: monospace;">
+                            <div class="metric">
+                                <span>Week +1:</span>
+                                <span id="pred-week-1" style="color: #FFD700;">--</span>
+                            </div>
+                            <div class="metric">
+                                <span>Week +2:</span>
+                                <span id="pred-week-2" style="color: #FFD700;">--</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="chart-container" style="height: 300px; margin-top: 20px;">
+                    <canvas id="lstmChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Fairness Tab -->
+        <div id="fairness" class="tab-content">
+            <div class="card">
+                <h2>⚖️ Fairness Monitoring</h2>
+                <p style="margin-bottom: 20px;">Monitoring demographic parity, equal opportunity, and disparate impact</p>
+                
+                <div class="grid">
+                    <div>
+                        <h3 style="margin-bottom: 10px;">Protected Attributes</h3>
+                        <div class="metric">
+                            <span class="metric-label">Age Group</span>
+                            <span class="metric-value" id="fairness-age">--</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">International</span>
+                            <span class="metric-value" id="fairness-intl">--</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Merchant Category</span>
+                            <span class="metric-value" id="fairness-merchant">--</span>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h3 style="margin-bottom: 10px;">Fairness Metrics</h3>
+                        <div class="metric">
+                            <span class="metric-label">Demographic Parity</span>
+                            <span class="metric-value" id="demo-parity">--</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Equal Opportunity</span>
+                            <span class="metric-value" id="equal-opp">--</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Disparate Impact</span>
+                            <span class="metric-value" id="disp-impact">--</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Logs Tab -->
+        <div id="logs" class="tab-content">
+            <div class="card">
+                <h2>📜 System Logs</h2>
+                <div id="logs-container" style="max-height: 500px; overflow-y: auto;">
+                    <div class="log-entry">
+                        <span class="log-time">[System]</span>
+                        Dashboard initialized
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // API Base URL
+        const API_BASE = 'http://localhost:8080/api';
+        
+        // Charts
+        let driftChart, performanceChart, driftHistoryChart, lstmChart;
+        
+        // WebSocket connection
+        let ws;
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            initCharts();
+            connectWebSocket();
+            loadInitialData();
+            hideLoading();
+        });
+        
+        function hideLoading() {
+            setTimeout(() => {
+                document.getElementById('loading').style.display = 'none';
+            }, 1000);
+        }
+        
+        function showTab(tabId) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabId).classList.add('active');
+            event.target.classList.add('active');
+        }
+        
+        function initCharts() {
+            // Drift Chart
+            const driftCtx = document.getElementById('driftChart').getContext('2d');
+            driftChart = new Chart(driftCtx, {
+                type: 'line',
+                data: {
+                    labels: ['W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7', 'W8', 'W9', 'W10'],
+                    datasets: [{
+                        label: 'Drift Ratio',
+                        data: [0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55],
+                        borderColor: '#4CAF50',
+                        backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 1,
+                            ticks: { color: '#fff' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        },
+                        x: {
+                            ticks: { color: '#fff' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        }
+                    }
+                }
+            });
+            
+            // Performance Chart
+            const perfCtx = document.getElementById('performanceChart').getContext('2d');
+            performanceChart = new Chart(perfCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['v1', 'v2', 'v3', 'v4', 'v5'],
+                    datasets: [{
+                        label: 'Accuracy',
+                        data: [0.94, 0.95, 0.948, 0.951, 0.952],
+                        backgroundColor: '#4CAF50'
+                    }, {
+                        label: 'AUC',
+                        data: [0.89, 0.90, 0.905, 0.906, 0.908],
+                        backgroundColor: '#2196F3'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: '#fff' } }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            min: 0.85,
+                            max: 1,
+                            ticks: { color: '#fff' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        },
+                        x: {
+                            ticks: { color: '#fff' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        }
+                    }
+                }
+            });
+            
+            // LSTM Chart
+            const lstmCtx = document.getElementById('lstmChart').getContext('2d');
+            lstmChart = new Chart(lstmCtx, {
+                type: 'line',
+                data: {
+                    labels: ['W-3', 'W-2', 'W-1', 'Current', 'W+1', 'W+2'],
+                    datasets: [{
+                        label: 'Historical',
+                        data: [0.3, 0.35, 0.4, 0.45, null, null],
+                        borderColor: '#4CAF50',
+                        backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                        tension: 0.4
+                    }, {
+                        label: 'Predicted',
+                        data: [null, null, null, 0.45, 0.50, 0.55],
+                        borderColor: '#FFD700',
+                        borderDash: [5, 5],
+                        backgroundColor: 'rgba(255, 215, 0, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: '#fff' } }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 1,
+                            ticks: { color: '#fff' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        },
+                        x: {
+                            ticks: { color: '#fff' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        }
+                    }
+                }
+            });
+            
+            // Drift History Chart (in Drift Detection tab)
+            const driftHistoryCtx = document.getElementById('driftHistoryChart').getContext('2d');
+            driftHistoryChart = new Chart(driftHistoryCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Drift Ratio',
+                        data: [],
+                        borderColor: '#FF6384',
+                        backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 5,
+                        pointHoverRadius: 7
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { 
+                            display: true,
+                            labels: { color: '#fff' }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Drift Over Time',
+                            color: '#fff',
+                            font: { size: 16 }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 1,
+                            ticks: { 
+                                color: '#fff',
+                                callback: function(value) {
+                                    return (value * 100).toFixed(0) + '%';
+                                }
+                            },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            title: {
+                                display: true,
+                                text: 'Drift Ratio',
+                                color: '#fff'
+                            }
+                        },
+                        x: {
+                            ticks: { 
+                                color: '#fff',
+                                maxRotation: 45,
+                                minRotation: 45
+                            },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            title: {
+                                display: true,
+                                text: 'Time',
+                                color: '#fff'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function connectWebSocket() {
+            ws = new WebSocket('ws://localhost:8080/ws');
+            
+            ws.onopen = () => {
+                document.getElementById('connection-status').textContent = 'Connected';
+                addLog('WebSocket connected');
+            };
+            
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                handleWebSocketMessage(data);
+            };
+            
+            ws.onerror = () => {
+                document.getElementById('connection-status').textContent = 'Error';
+            };
+            
+            ws.onclose = () => {
+                document.getElementById('connection-status').textContent = 'Disconnected';
+                setTimeout(connectWebSocket, 5000);
+            };
+        }
+        
+        function handleWebSocketMessage(data) {
+            if (data.type === 'status_update') {
+                updateMetrics(data.metrics);
+            } else if (data.type === 'batch_processed') {
+                addLog(`📊 Batch ${data.data.batch_id} processed: ${data.data.severity} drift`);
+                
+                // Update metrics in real-time
+                if (data.data.metrics) {
+                    document.getElementById('current-drift').textContent = data.data.metrics.current_drift;
+                    document.getElementById('severity').textContent = data.data.metrics.severity;
+                    document.getElementById('processed-batches').textContent = data.data.metrics.processed_batches;
+                    
+                    if (data.data.cara_decision) {
+                        document.getElementById('cara-decision').textContent = data.data.metrics.cara_decision;
+                        document.getElementById('cara-score').textContent = data.data.metrics.cara_score.toFixed(3);
+                    }
+                    
+                    if (data.data.retrained) {
+                        document.getElementById('accuracy').textContent = `${(data.data.metrics.accuracy * 100).toFixed(1)}%`;
+                        document.getElementById('auc').textContent = `${(data.data.metrics.auc * 100).toFixed(1)}%`;
+                        document.getElementById('model-version').textContent = data.data.metrics.model_version;
+                    }
+                }
+                
+                // Reload charts
+                loadInitialData();
+            } else if (data.type === 'model_trained') {
+                addLog(`🎯 Model trained: ${(data.data.accuracy * 100).toFixed(1)}% accuracy`);
+                document.getElementById('accuracy').textContent = `${(data.data.accuracy * 100).toFixed(1)}%`;
+                document.getElementById('auc').textContent = `${(data.data.auc * 100).toFixed(1)}%`;
+            }
+        }
+        
+        async function loadInitialData() {
+            try {
+                // Load status
+                const statusRes = await fetch(`${API_BASE}/status`);
+                const status = await statusRes.json();
+                updateMetrics(status.metrics);
+                
+                // Load drift history
+                const driftRes = await fetch(`${API_BASE}/drift/history`);
+                const driftData = await driftRes.json();
+                updateDriftChart(driftData);
+                
+                // Load LSTM predictions
+                const lstmRes = await fetch(`${API_BASE}/predictions/lstm`);
+                const lstmData = await lstmRes.json();
+                if (lstmData.available) {
+                    updateLSTMDisplay(lstmData);
+                }
+                
+                // Load CARA decision
+                const caraRes = await fetch(`${API_BASE}/cara/decision`);
+                const caraData = await caraRes.json();
+                updateCARADisplay(caraData);
+                
+                // Load fairness metrics
+                const fairnessRes = await fetch(`${API_BASE}/fairness/metrics`);
+                const fairnessData = await fairnessRes.json();
+                if (fairnessData.available) {
+                    updateFairnessDisplay(fairnessData);
+                }
+                
+                addLog('Initial data loaded');
+            } catch (error) {
+                console.error('Error loading data:', error);
+                addLog('Error loading data - using defaults');
+            }
+        }
+        
+        function updateMetrics(metrics) {
+            document.getElementById('accuracy').textContent = `${(metrics.accuracy * 100).toFixed(1)}%`;
+            document.getElementById('auc').textContent = `${(metrics.auc * 100).toFixed(1)}%`;
+            document.getElementById('model-version').textContent = `v${metrics.model_version}`;
+            document.getElementById('current-drift').textContent = `${(metrics.drift_ratio * 100).toFixed(1)}%`;
+            document.getElementById('processed-batches').textContent = metrics.processed_batches;
+        }
+        
+        function updateDriftChart(data) {
+            if (data.drift_ratios && data.drift_ratios.length > 0) {
+                // Update Overview tab drift chart
+                driftChart.data.labels = data.timestamps || data.drift_ratios.map((_, i) => `W${i+1}`);
+                driftChart.data.datasets[0].data = data.drift_ratios;
+                driftChart.update();
+                
+                // Update Drift Detection tab drift history chart
+                const labels = data.timestamps.map((ts, i) => {
+                    const date = new Date(ts);
+                    return `${date.getMonth()+1}/${date.getDate()} ${date.getHours()}:${date.getMinutes().toString().padStart(2,'0')}`;
+                });
+                
+                driftHistoryChart.data.labels = labels;
+                driftHistoryChart.data.datasets[0].data = data.drift_ratios;
+                driftHistoryChart.update();
+                
+                console.log('Drift charts updated with', data.drift_ratios.length, 'data points');
+            }
+        }
+        
+        function updateLSTMDisplay(data) {
+            if (data.recent_weeks) {
+                document.getElementById('week-3').textContent = data.recent_weeks[0].toFixed(3);
+                document.getElementById('week-2').textContent = data.recent_weeks[1].toFixed(3);
+                document.getElementById('week-1').textContent = data.recent_weeks[2].toFixed(3);
+                document.getElementById('week-0').textContent = data.recent_weeks[3].toFixed(3);
+            }
+            
+            if (data.predicted_weeks) {
+                document.getElementById('pred-week-1').textContent = data.predicted_weeks[0].toFixed(3);
+                document.getElementById('pred-week-2').textContent = data.predicted_weeks[1].toFixed(3);
+                
+                // Update LSTM chart
+                const histData = [...data.recent_weeks, ...data.predicted_weeks];
+                lstmChart.data.datasets[0].data = [...data.recent_weeks, null, null];
+                lstmChart.data.datasets[1].data = [null, null, null, data.recent_weeks[3], ...data.predicted_weeks];
+                lstmChart.update();
+            }
+        }
+        
+        function updateCARADisplay(data) {
+            document.getElementById('cara-decision').textContent = data.decision;
+            document.getElementById('cara-score').textContent = data.score.toFixed(3);
+            document.getElementById('expected-gain').textContent = `${(data.expected_gain * 100).toFixed(1)}%`;
+            document.getElementById('cara-justification').textContent = data.justification;
+        }
+        
+        function updateFairnessDisplay(data) {
+            if (!data.available || !data.protected_attributes) return;
+            
+            // Update protected attributes
+            const attrs = data.protected_attributes;
+            
+            // Age Group
+            if (attrs['user_age_bucket']) {
+                const age = attrs['user_age_bucket'];
+                document.getElementById('fairness-age').textContent = age.status;
+                document.getElementById('fairness-age').style.color = age.status === 'FAIR' ? '#4CAF50' : '#f44336';
+            }
+            
+            // International
+            if (attrs['is_international']) {
+                const intl = attrs['is_international'];
+                document.getElementById('fairness-intl').textContent = intl.status;
+                document.getElementById('fairness-intl').style.color = intl.status === 'FAIR' ? '#4CAF50' : '#f44336';
+            }
+            
+            // Merchant Category
+            if (attrs['merchant_category']) {
+                const merchant = attrs['merchant_category'];
+                document.getElementById('fairness-merchant').textContent = merchant.status;
+                document.getElementById('fairness-merchant').style.color = merchant.status === 'FAIR' ? '#4CAF50' : '#f44336';
+            }
+            
+            // Update fairness metrics (use first attribute as example)
+            const firstAttr = Object.values(attrs)[0];
+            if (firstAttr) {
+                document.getElementById('demo-parity').textContent = firstAttr.demographic_parity.toFixed(3);
+                document.getElementById('equal-opp').textContent = firstAttr.equal_opportunity.toFixed(3);
+                document.getElementById('disp-impact').textContent = firstAttr.disparate_impact.toFixed(3);
+            }
+        }
+        
+        function addLog(message) {
+            const container = document.getElementById('logs-container');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            const time = new Date().toLocaleTimeString();
+            entry.innerHTML = `<span class="log-time">[${time}]</span> ${message}`;
+            container.insertBefore(entry, container.firstChild);
+        }
+        
+        // API Actions
+        async function processBatch() {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = '⏳ Processing...';
+            addLog('Processing next batch...');
+            
+            try {
+                const res = await fetch(`${API_BASE}/process/batch`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({})
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    addLog(`✓ Batch ${data.batch_id} processed: ${data.drift_score.overall_severity} drift (${(data.drift_score.drift_ratio * 100).toFixed(1)}%)`);
+                    
+                    // Update all metrics
+                    if (data.metrics) {
+                        document.getElementById('accuracy').textContent = `${(data.metrics.accuracy * 100).toFixed(1)}%`;
+                        document.getElementById('auc').textContent = `${(data.metrics.auc * 100).toFixed(1)}%`;
+                        document.getElementById('model-version').textContent = data.metrics.model_version;
+                        document.getElementById('current-drift').textContent = data.metrics.current_drift;
+                        document.getElementById('severity').textContent = data.metrics.severity;
+                        document.getElementById('processed-batches').textContent = data.metrics.processed_batches;
+                        
+                        // Update CARA display
+                        if (data.cara_decision) {
+                            document.getElementById('cara-decision').textContent = data.cara_decision.decision;
+                            document.getElementById('cara-score').textContent = data.cara_decision.score.toFixed(3);
+                            document.getElementById('expected-gain').textContent = `${(data.cara_decision.expected_gain * 100).toFixed(1)}%`;
+                            document.getElementById('cara-justification').textContent = data.cara_decision.justification;
+                        }
+                    }
+                    
+                    // Show retrain notification
+                    if (data.retrain_result) {
+                        addLog(`🎯 Model automatically retrained! New accuracy: ${(data.retrain_result.metrics.accuracy * 100).toFixed(1)}%`);
+                    }
+                    
+                    // Reload data to update charts
+                    await loadInitialData();
+                } else {
+                    addLog(`❌ Error: ${data.error}`);
+                    console.error(data);
+                }
+            } catch (error) {
+                addLog('❌ Error processing batch');
+                console.error(error);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '📊 Process Batch';
+            }
+        }
+        
+        async function trainModel() {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = '⏳ Training...';
+            addLog('Training model...');
+            
+            try {
+                const res = await fetch(`${API_BASE}/train/model`, { method: 'POST' });
+                const data = await res.json();
+                
+                if (data.success) {
+                    addLog(`✓ Model trained: ${(data.metrics.accuracy * 100).toFixed(1)}% accuracy, ${(data.metrics.auc * 100).toFixed(1)}% AUC`);
+                    
+                    // Update metrics
+                    document.getElementById('accuracy').textContent = `${(data.metrics.accuracy * 100).toFixed(1)}%`;
+                    document.getElementById('auc').textContent = `${(data.metrics.auc * 100).toFixed(1)}%`;
+                    document.getElementById('model-version').textContent = data.version;
+                    document.getElementById('training-time').textContent = `${data.training_time.toFixed(2)}s`;
+                    
+                    // Reload data to update charts
+                    await loadInitialData();
+                } else {
+                    addLog(`❌ Error: ${data.error}`);
+                }
+            } catch (error) {
+                addLog('❌ Error training model');
+                console.error(error);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '🎯 Train Model';
+            }
+        }
+        
+        async function trainLSTM() {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = '⏳ Training...';
+            addLog('Training LSTM predictor...');
+            
+            try {
+                const res = await fetch(`${API_BASE}/train/lstm`, { method: 'POST' });
+                const data = await res.json();
+                
+                if (data.success) {
+                    addLog(`✓ LSTM trained: loss=${data.training_loss.toFixed(4)}, val_loss=${data.validation_loss.toFixed(4)}`);
+                    
+                    // Reload LSTM predictions
+                    const lstmRes = await fetch(`${API_BASE}/predictions/lstm`);
+                    const lstmData = await lstmRes.json();
+                    if (lstmData.available) {
+                        updateLSTMDisplay(lstmData);
+                        addLog(`✓ LSTM predictions updated`);
+                    }
+                } else {
+                    addLog(`❌ Error: ${data.error}`);
+                }
+            } catch (error) {
+                addLog('❌ Error training LSTM');
+                console.error(error);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '🧠 Train LSTM';
+            }
+        }
+        
+        async function runFullPipeline() {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = '⏳ Running Pipeline...';
+            addLog('🚀 Running full pipeline...');
+            
+            try {
+                // Process all 3 batches
+                for (let i = 0; i < 3; i++) {
+                    addLog(`Processing batch ${i+1}/3...`);
+                    const res = await fetch(`${API_BASE}/process/batch`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({})
+                    });
+                    const data = await res.json();
+                    
+                    if (data.success) {
+                        addLog(`✓ Batch ${data.batch_id}: ${data.drift_score.overall_severity} drift`);
+                        if (data.retrain_result) {
+                            addLog(`🎯 Auto-retrained! Accuracy: ${(data.retrain_result.metrics.accuracy * 100).toFixed(1)}%`);
+                        }
+                        
+                        // Wait a bit between batches
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                    }
+                }
+                
+                // Train LSTM
+                addLog('Training LSTM predictor...');
+                const lstmRes = await fetch(`${API_BASE}/train/lstm`, { method: 'POST' });
+                const lstmData = await lstmRes.json();
+                if (lstmData.success) {
+                    addLog(`✓ LSTM trained successfully`);
+                }
+                
+                // Reload all data
+                await loadInitialData();
+                addLog('✅ Full pipeline complete!');
+                
+            } catch (error) {
+                addLog('❌ Error running pipeline');
+                console.error(error);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '▶️ Run Full Pipeline';
+            }
+        }
+        
+        // Auto-refresh every 5 seconds
+        setInterval(loadInitialData, 5000);
+        
+        // Upload Functions
+        async function uploadOriginalBatch() {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = '⏳ Uploading...';
+            addLog('📤 Uploading original batch (100K rows)...');
+            
+            try {
+                // Call quick upload endpoint
+                const response = await fetch(`${API_BASE}/upload/quick/original`, {
+                    method: 'POST'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    addLog(`✅ Original batch uploaded: ${data.metadata.n_rows.toLocaleString()} rows, ${(data.metadata.fraud_rate * 100).toFixed(2)}% fraud`);
+                    addLog(`🔍 Drift detected: ${data.drift_score.overall_severity} (${(data.drift_score.drift_ratio * 100).toFixed(1)}%)`);
+                    addLog(`🎯 CARA Decision: ${data.cara_decision.decision}`);
+                    
+                    // Reload dashboard
+                    await loadInitialData();
+                } else {
+                    addLog(`❌ Upload failed: ${data.error}`);
+                }
+            } catch (error) {
+                addLog(`❌ Error: ${error.message}`);
+                console.error(error);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '📤 Upload Original Batch';
+            }
+        }
+        
+        async function uploadDriftedBatch() {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = '⏳ Uploading...';
+            addLog('📤 Uploading drifted batch (100K rows)...');
+            
+            try {
+                // Call quick upload endpoint
+                const response = await fetch(`${API_BASE}/upload/quick/drifted`, {
+                    method: 'POST'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    addLog(`✅ Drifted batch uploaded: ${data.metadata.n_rows.toLocaleString()} rows, ${(data.metadata.fraud_rate * 100).toFixed(2)}% fraud`);
+                    addLog(`🔍 Drift detected: ${data.drift_score.overall_severity} (${(data.drift_score.drift_ratio * 100).toFixed(1)}%)`);
+                    addLog(`🎯 CARA Decision: ${data.cara_decision.decision}`);
+                    
+                    if (data.retrain_result) {
+                        addLog(`🔄 Model retrained: ${data.retrain_result.version}`);
+                        addLog(`📊 New accuracy: ${(data.retrain_result.metrics.accuracy * 100).toFixed(1)}%`);
+                    }
+                    
+                    // Reload dashboard
+                    await loadInitialData();
+                } else {
+                    addLog(`❌ Upload failed: ${data.error}`);
+                }
+            } catch (error) {
+                addLog(`❌ Error: ${error.message}`);
+                console.error(error);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '📤 Upload Drifted Batch';
+            }
+        }
+        
+        function showUploadDialog() {
+            document.getElementById('uploadOverlay').classList.add('show');
+            document.getElementById('uploadDialog').classList.add('show');
+        }
+        
+        function closeUploadDialog() {
+            document.getElementById('uploadOverlay').classList.remove('show');
+            document.getElementById('uploadDialog').classList.remove('show');
+            document.getElementById('uploadResult').style.display = 'none';
+        }
+        
+        async function uploadCustomFile() {
+            const fileInput = document.getElementById('customFile');
+            const batchIdInput = document.getElementById('customBatchId');
+            const resultDiv = document.getElementById('uploadResult');
+            
+            if (!fileInput.files[0]) {
+                resultDiv.className = 'upload-result error';
+                resultDiv.textContent = 'Please select a file';
+                resultDiv.style.display = 'block';
+                return;
+            }
+            
+            if (!batchIdInput.value) {
+                resultDiv.className = 'upload-result error';
+                resultDiv.textContent = 'Please enter a batch ID';
+                resultDiv.style.display = 'block';
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            formData.append('batch_id', batchIdInput.value);
+            
+            try {
+                addLog(`Uploading custom file: ${fileInput.files[0].name}...`);
+                
+                // Step 1: Upload the file
+                const response = await fetch(`${API_BASE}/upload/batch`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.className = 'upload-result success';
+                    resultDiv.innerHTML = `
+                        <strong>✅ Upload Successful!</strong><br>
+                        Rows: ${data.metadata.n_rows.toLocaleString()}<br>
+                        Columns: ${data.metadata.n_columns}<br>
+                        Fraud Rate: ${(data.metadata.fraud_rate * 100).toFixed(2)}%<br>
+                        <em>Processing drift analysis...</em>
+                    `;
+                    resultDiv.style.display = 'block';
+                    
+                    addLog(`✅ Custom file uploaded: ${data.metadata.n_rows.toLocaleString()} rows`);
+                    addLog(`🔍 Running drift detection and CARA analysis...`);
+                    
+                    // Step 2: Process the batch (drift detection + CARA)
+                    const processResponse = await fetch(`${API_BASE}/upload/process/${data.batch_id}`, {
+                        method: 'POST'
+                    });
+                    
+                    const processData = await processResponse.json();
+                    
+                    if (processData.error) {
+                        resultDiv.className = 'upload-result error';
+                        resultDiv.textContent = `❌ Processing failed: ${processData.error}`;
+                        addLog(`❌ Processing failed: ${processData.error}`);
+                    } else {
+                        resultDiv.innerHTML = `
+                            <strong>✅ Analysis Complete!</strong><br>
+                            Drift Ratio: ${(processData.drift_ratio * 100).toFixed(1)}%<br>
+                            Severity: ${processData.severity}<br>
+                            CARA Decision: <strong>${processData.cara_decision}</strong><br>
+                            CARA Score: ${processData.cara_score.toFixed(3)}
+                        `;
+                        addLog(`✅ Analysis complete: ${processData.cara_decision} (score: ${processData.cara_score.toFixed(3)})`);
+                    }
+                    
+                    // Close dialog and refresh after 3 seconds
+                    setTimeout(() => {
+                        closeUploadDialog();
+                        loadInitialData();
+                    }, 3000);
+                } else {
+                    resultDiv.className = 'upload-result error';
+                    resultDiv.textContent = `❌ Upload failed: ${data.error}`;
+                    resultDiv.style.display = 'block';
+                    addLog(`❌ Upload failed: ${data.error}`);
+                }
+            } catch (error) {
+                resultDiv.className = 'upload-result error';
+                resultDiv.textContent = `❌ Error: ${error.message}`;
+                resultDiv.style.display = 'block';
+                addLog(`❌ Upload error: ${error.message}`);
+            }
+        }
+    </script>
+    
+    <!-- Upload Dialog -->
+    <div id="uploadOverlay" class="upload-overlay" onclick="closeUploadDialog()"></div>
+    <div id="uploadDialog" class="upload-dialog">
+        <h3>📁 Upload Custom Batch File</h3>
+        <p style="opacity: 0.8; margin-bottom: 15px;">Upload a Parquet or CSV file for drift detection</p>
+        
+        <input type="file" id="customFile" accept=".parquet,.csv" />
+        <input type="text" id="customBatchId" placeholder="Batch ID (e.g., custom_batch_001)" />
+        
+        <div style="display: flex; gap: 10px;">
+            <button class="btn" onclick="uploadCustomFile()" style="flex: 1;">📤 Upload</button>
+            <button class="btn" onclick="closeUploadDialog()" style="flex: 1; background: #666;">❌ Cancel</button>
+        </div>
+        
+        <div id="uploadResult" class="upload-result"></div>
+    </div>
+</body>
+</html>

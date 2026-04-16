@@ -1,0 +1,67 @@
+version: "3.8"
+
+services:
+
+  # ── MLflow Tracking Server ──────────────────────────────────────
+  mlflow:
+    image: python:3.11-slim
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./mlruns:/mlruns
+      - ./mlflow.db:/mlflow.db
+    command: >
+      sh -c "pip install mlflow==2.19.0 -q &&
+             mlflow server
+             --backend-store-uri sqlite:////mlflow.db
+             --default-artifact-root /mlruns
+             --host 0.0.0.0 --port 5000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ── Drift Monitor Service ───────────────────────────────────────
+  drift-monitor:
+    image: python:3.11-slim
+    # For GPU support, uncomment below and use rapidsai/base:25.02-cuda12.0-py3.11
+    # runtime: nvidia
+    environment:
+      # - NVIDIA_VISIBLE_DEVICES=all
+      # - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+      - REFERENCE_PATH=/data/reference/reference.parquet
+      - PRODUCTION_PATH=/data/production
+    volumes:
+      - ./data:/data
+      - ./src:/app/src
+      - ./src/services/drift_monitor_service.py:/app/service.py
+    ports:
+      - "8001:8001"
+    command: >
+      sh -c "pip install scipy fastapi uvicorn pyarrow pandas numpy -q &&
+             uvicorn service:app --host 0.0.0.0 --port 8001"
+    depends_on:
+      - mlflow
+
+  # ── Retrain Engine Service ──────────────────────────────────────
+  retrain-engine:
+    image: python:3.11-slim
+    # For GPU support, uncomment below and use rapidsai/base:25.02-cuda12.0-py3.11
+    # runtime: nvidia
+    environment:
+      # - NVIDIA_VISIBLE_DEVICES=all
+      # - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+    volumes:
+      - ./data:/data
+      - ./src:/app/src
+      - ./src/services/retrain_service.py:/app/service.py
+    ports:
+      - "8002:8002"
+    command: >
+      sh -c "pip install mlflow fastapi uvicorn scikit-learn joblib pyarrow pandas numpy -q &&
+             uvicorn service:app --host 0.0.0.0 --port 8002"
+    depends_on:
+      - mlflow

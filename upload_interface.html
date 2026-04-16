@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Data Batches - ML Auto-Retrain</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+        }
+        
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+        
+        .upload-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            border: 2px dashed #667eea;
+        }
+        
+        .upload-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+        
+        .file-input-wrapper {
+            position: relative;
+            margin-bottom: 15px;
+        }
+        
+        input[type="file"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        input[type="file"]:hover {
+            border-color: #667eea;
+        }
+        
+        input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .quick-upload {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .quick-btn {
+            background: #28a745;
+            padding: 12px;
+            font-size: 14px;
+        }
+        
+        .quick-btn:hover {
+            background: #218838;
+        }
+        
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            display: none;
+        }
+        
+        .result.success {
+            background: #d4edda;
+            border: 2px solid #28a745;
+            color: #155724;
+            display: block;
+        }
+        
+        .result.error {
+            background: #f8d7da;
+            border: 2px solid #dc3545;
+            color: #721c24;
+            display: block;
+        }
+        
+        .result h3 {
+            margin-bottom: 10px;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .stat-box {
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        
+        .info-box h3 {
+            color: #2196F3;
+            margin-bottom: 10px;
+        }
+        
+        .file-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .file-list li {
+            padding: 8px;
+            background: white;
+            margin-bottom: 5px;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 10px auto;
+            display: none;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Upload Data Batches</h1>
+        <p class="subtitle">Upload batch data for drift detection and model retraining</p>
+        
+        <div class="info-box">
+            <h3>📁 Available Data Batches</h3>
+            <ul class="file-list">
+                <li>
+                    <span>📄 original_100K.parquet</span>
+                    <span>5.12 MB | 6.04% fraud</span>
+                </li>
+                <li>
+                    <span>📄 drifted_100K.parquet</span>
+                    <span>5.12 MB | 9.11% fraud</span>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="upload-section">
+            <h2>🚀 Manual Upload</h2>
+            
+            <div class="file-input-wrapper">
+                <input type="file" id="fileInput" accept=".parquet,.csv" />
+            </div>
+            
+            <input type="text" id="batchId" placeholder="Batch ID (e.g., batch_001)" />
+            
+            <button onclick="uploadFile()">Upload Batch</button>
+            
+            <div class="spinner" id="spinner"></div>
+        </div>
+        
+        <div class="upload-section">
+            <h2>⚡ Quick Upload (Pre-generated Batches)</h2>
+            <div class="quick-upload">
+                <button class="quick-btn" onclick="quickUpload('original')">
+                    📤 Upload Original Batch
+                </button>
+                <button class="quick-btn" onclick="quickUpload('drifted')">
+                    📤 Upload Drifted Batch
+                </button>
+            </div>
+        </div>
+        
+        <div id="result" class="result"></div>
+    </div>
+    
+    <script>
+        const API_URL = 'http://localhost:8080';
+        
+        async function uploadFile() {
+            const fileInput = document.getElementById('fileInput');
+            const batchId = document.getElementById('batchId').value;
+            const resultDiv = document.getElementById('result');
+            const spinner = document.getElementById('spinner');
+            
+            if (!fileInput.files[0]) {
+                showResult('error', 'Please select a file');
+                return;
+            }
+            
+            if (!batchId) {
+                showResult('error', 'Please enter a batch ID');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            formData.append('batch_id', batchId);
+            
+            spinner.style.display = 'block';
+            resultDiv.style.display = 'none';
+            
+            try {
+                const response = await fetch(`${API_URL}/api/upload/batch`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                spinner.style.display = 'none';
+                
+                if (data.success) {
+                    showResult('success', 'Upload Successful!', data.metadata);
+                } else {
+                    showResult('error', data.error || 'Upload failed');
+                }
+            } catch (error) {
+                spinner.style.display = 'none';
+                showResult('error', `Error: ${error.message}`);
+            }
+        }
+        
+        async function quickUpload(type) {
+            const resultDiv = document.getElementById('result');
+            const spinner = document.getElementById('spinner');
+            
+            const fileName = type === 'original' ? 'original_100K.parquet' : 'drifted_100K.parquet';
+            const batchId = type === 'original' ? 'original_batch' : 'drifted_batch';
+            
+            spinner.style.display = 'block';
+            resultDiv.style.display = 'none';
+            
+            // Note: This requires the files to be accessible via the server
+            // For now, show instructions
+            spinner.style.display = 'none';
+            
+            showResult('success', 
+                `To upload ${fileName}:`, 
+                {
+                    message: `Run this command in terminal:`,
+                    command: `python upload_batches.py`,
+                    or: `Or use the Python script we created`
+                }
+            );
+        }
+        
+        function showResult(type, message, metadata = null) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = `result ${type}`;
+            
+            let html = `<h3>${message}</h3>`;
+            
+            if (metadata) {
+                if (metadata.n_rows) {
+                    html += `
+                        <div class="stats">
+                            <div class="stat-box">
+                                <div class="stat-label">Rows</div>
+                                <div class="stat-value">${metadata.n_rows.toLocaleString()}</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-label">Columns</div>
+                                <div class="stat-value">${metadata.n_columns}</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-label">Fraud Rate</div>
+                                <div class="stat-value">${(metadata.fraud_rate * 100).toFixed(2)}%</div>
+                            </div>
+                        </div>
+                    `;
+                } else if (metadata.command) {
+                    html += `<p><strong>${metadata.message}</strong></p>`;
+                    html += `<p><code>${metadata.command}</code></p>`;
+                }
+            }
+            
+            resultDiv.innerHTML = html;
+        }
+    </script>
+</body>
+</html>

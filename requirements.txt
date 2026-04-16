@@ -1,0 +1,32 @@
+# ML Auto-Retrain System Dependencies
+
+# Core ML libraries (CPU fallback)
+pandas==2.2.0
+numpy==1.26.4
+scipy==1.12.0
+scikit-learn==1.4.0
+
+# MLflow for experiment tracking
+mlflow==2.19.0
+
+# FastAPI for services
+fastapi==0.115.0
+uvicorn==0.34.0
+requests==2.32.0
+
+# Data handling
+pyarrow==18.0.0
+joblib==1.4.2
+
+# Deep Learning (for LSTM drift predictor - Day 6)
+tensorflow==2.15.0
+
+# Kaggle API (for IEEE fraud dataset download)
+kaggle==1.6.6
+
+# Environment
+python-dotenv==1.0.1
+
+# GPU acceleration (optional - uncomment if GPU available)
+# cudf-cu12==26.2.0 --extra-index-url=https://pypi.nvidia.com
+# cuml-cu12==26.2.0 --extra-index-url=https://pypi.nvidia.com
