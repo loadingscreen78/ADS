@@ -1,0 +1,37 @@
+{
+  "version": 2,
+  "name": "ml-auto-retrain-cara",
+  "builds": [
+    {
+      "src": "api/app.py",
+      "use": "@vercel/python"
+    },
+    {
+      "src": "dashboard.html",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/",
+      "dest": "/api/app.py"
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/app.py"
+    },
+    {
+      "src": "/dashboard",
+      "dest": "/dashboard.html"
+    }
+  ],
+  "env": {
+    "PYTHONPATH": "."
+  },
+  "functions": {
+    "api/app.py": {
+      "memory": 1024,
+      "maxDuration": 30
+    }
+  }
+}
